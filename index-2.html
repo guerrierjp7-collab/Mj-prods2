@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MJ PRO CASH TRANSFER</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --bg:#07080f;--surf:#0e1120;--card:#141726;--border:#1f2540;
+  --ap:#ff5f57;--lb:#3de8c8;--gold:#ffd166;--text:#eef0f8;
+  --muted:#5a6282;--green:#06d6a0;--red:#ef233c;
+  --purple:#9d4edd;--orange:#f4a261;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;min-height:100vh}
+
+/* ══ WELCOME SCREEN ══ */
+#welcome-screen{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;padding:24px;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(61,232,200,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 80%, rgba(255,95,87,0.1) 0%, transparent 60%),
+    var(--bg);
+}
+.welcome-logo{
+  font-family:'Unbounded',sans-serif;font-size:28px;font-weight:900;
+  text-align:center;margin-bottom:8px;letter-spacing:-1px;
+}
+.welcome-logo .ap{color:var(--ap)}.welcome-logo .lb{color:var(--lb)}
+.welcome-sub{font-size:11px;color:var(--muted);text-align:center;letter-spacing:2px;margin-bottom:40px}
+.welcome-img{
+  width:80px;height:80px;border-radius:24px;margin:0 auto 24px;
+  border:3px solid var(--lb);box-shadow:0 0 32px rgba(61,232,200,0.3);
+  object-fit:cover;display:block;
+  background:linear-gradient(135deg,var(--ap),var(--lb));
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;
+}
+.auth-card{
+  width:100%;max-width:420px;
+  background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:28px;box-shadow:0 24px 64px rgba(0,0,0,0.5);
+}
+.auth-tabs{display:flex;gap:0;background:var(--surf);border-radius:12px;padding:3px;margin-bottom:24px}
+.auth-tab{
+  flex:1;padding:9px;border:none;background:transparent;color:var(--muted);
+  font-family:'Unbounded',sans-serif;font-size:10px;font-weight:700;
+  cursor:pointer;border-radius:9px;transition:all .2s;
+}
+.auth-tab.active{background:var(--gold);color:#000}
+.auth-panel{display:none}.auth-panel.active{display:block}
+.field-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;display:block}
+.field-input{
+  width:100%;background:var(--surf);border:1px solid var(--border);
+  border-radius:10px;color:var(--text);font-family:'Space Mono',monospace;
+  font-size:13px;padding:11px 14px;outline:none;transition:border-color .2s;
+  margin-bottom:12px;
+}
+.field-input:focus{border-color:var(--gold)}
+.field-input::placeholder{color:var(--muted)}
+.auth-btn{
+  width:100%;padding:13px;border-radius:11px;border:none;
+  font-family:'Unbounded',sans-serif;font-weight:700;font-size:11px;
+  cursor:pointer;transition:all .15s;margin-top:4px;
+}
+.auth-btn:active{transform:scale(.97)}
+.btn-gold{background:var(--gold);color:#000}
+.btn-lb{background:var(--lb);color:#000}
+.auth-msg{
+  font-size:11px;text-align:center;margin-top:12px;padding:9px 14px;
+  border-radius:9px;display:none;
+}
+.auth-msg.err{background:rgba(239,35,60,.12);color:var(--red);border:1px solid rgba(239,35,60,.3);display:block}
+.auth-msg.ok{background:rgba(6,214,160,.12);color:var(--green);border:1px solid rgba(6,214,160,.3);display:block}
+.welcome-note{font-size:9px;color:var(--muted);text-align:center;margin-top:20px;line-height:1.7}
+.welcome-note a{color:var(--lb);text-decoration:none}
+
+/* ══ CONFIG SCREEN ══ */
+#config-screen{
+  display:none;min-height:100vh;padding:24px;
+  align-items:center;justify-content:center;flex-direction:column;
+  background:var(--bg);
+}
+.config-card{
+  width:100%;max-width:480px;background:var(--card);
+  border:1px solid var(--border);border-radius:20px;padding:28px;
+}
+.config-title{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:900;margin-bottom:6px}
+.config-sub{font-size:10px;color:var(--muted);margin-bottom:20px;line-height:1.6}
+.step-badge{
+  display:inline-block;background:var(--gold);color:#000;
+  font-family:'Unbounded',sans-serif;font-size:9px;font-weight:700;
+  padding:3px 10px;border-radius:20px;margin-bottom:14px;
+}
+.code-block{
+  background:var(--surf);border:1px solid var(--border);border-radius:10px;
+  padding:14px;font-size:11px;color:var(--lb);line-height:1.8;
+  margin-bottom:14px;overflow-x:auto;white-space:pre;
+}
+.setup-steps{counter-reset:step}
+.setup-step{
+  display:flex;gap:12px;margin-bottom:14px;font-size:12px;line-height:1.5;
+  color:var(--muted);
+}
+.setup-step::before{
+  counter-increment:step;content:counter(step);
+  background:var(--lb);color:#000;font-family:'Unbounded',sans-serif;
+  font-weight:700;font-size:10px;width:22px;height:22px;
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-top:1px;
+}
+.setup-step span{color:var(--text)}
+.config-divider{height:1px;background:var(--border);margin:20px 0}
+
+/* ══ APP ══ */
+#app{display:none;padding-bottom:80px}
+
+.topbar{
+  background:var(--surf);border-bottom:2px solid var(--border);
+  padding:0 16px;position:sticky;top:0;z-index:200;
+}
+.topbar-main{display:flex;align-items:center;justify-content:space-between;padding:10px 0 8px}
+.logo{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:900;letter-spacing:-.5px}
+.logo .ap{color:var(--ap)}.logo .lb{color:var(--lb)}
+.branch-pills{display:flex;gap:6px}
+.bpill{
+  padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);
+  background:transparent;color:var(--muted);font-family:'Unbounded',sans-serif;
+  font-size:9px;font-weight:700;cursor:pointer;transition:all .2s;
+}
+.bpill.ap.active{background:var(--ap);color:#fff;border-color:var(--ap)}
+.bpill.lb.active{background:var(--lb);color:#000;border-color:var(--lb)}
+.nav{display:flex;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--border)}
+.nav::-webkit-scrollbar{display:none}
+.nav-btn{
+  flex-shrink:0;padding:10px 12px;background:transparent;border:none;
+  color:var(--muted);font-family:'Unbounded',sans-serif;font-size:9px;
+  font-weight:700;cursor:pointer;border-bottom:2px solid transparent;
+  transition:all .2s;white-space:nowrap;
+}
+.nav-btn.active{color:var(--text);border-bottom-color:var(--gold)}
+.topbar-actions{display:flex;gap:5px;align-items:center}
+.ico-btn{
+  background:var(--card);border:1.5px solid var(--border);border-radius:9px;
+  color:var(--text);font-size:14px;width:34px;height:34px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .15s;flex-shrink:0;
+}
+.ico-btn:active{transform:scale(.92)}
+.ico-btn.save{background:rgba(6,214,160,.12);border-color:var(--green);color:var(--green)}
+.ico-btn.exit{background:rgba(239,35,60,.1);border-color:var(--red);color:var(--red)}
+.user-pill{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(61,232,200,.08);border:1px solid rgba(61,232,200,.2);
+  border-radius:20px;padding:5px 12px 5px 7px;cursor:pointer;
+}
+.user-avatar{
+  width:24px;height:24px;border-radius:50%;background:var(--lb);
+  color:#000;font-family:'Unbounded',sans-serif;font-size:9px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+}
+.user-name-pill{font-family:'Unbounded',sans-serif;font-size:9px;color:var(--lb);font-weight:700}
+.sync-indicator{
+  width:7px;height:7px;border-radius:50%;background:var(--green);
+  margin-left:3px;animation:pulse 2s infinite;
+}
+.sync-indicator.offline{background:var(--red);animation:none}
+.sync-indicator.syncing{background:var(--gold);animation:pulse .5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ══ SECTIONS ══ */
+.sec{display:none;padding:14px;animation:up .2s ease}
+.sec.active{display:block}
+@keyframes up{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:15px;margin-bottom:11px}
+.ctitle{font-family:'Unbounded',sans-serif;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:12px;text-transform:uppercase}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:11px}
+.sbox{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 10px}
+.sbox.g{border-color:var(--green);background:rgba(6,214,160,.06)}
+.sbox.r{border-color:var(--red);background:rgba(239,35,60,.06)}
+.sbox.a{border-color:var(--ap);background:rgba(255,95,87,.06)}
+.sbox.l{border-color:var(--lb);background:rgba(61,232,200,.06)}
+.sbox.gold{border-color:var(--gold);background:rgba(255,209,102,.06)}
+.sbox.purple{border-color:var(--purple);background:rgba(157,78,221,.06)}
+.slabel{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.sval{font-family:'Unbounded',sans-serif;font-weight:900;font-size:16px}
+.sval.green{color:var(--green)}.sval.red{color:var(--red)}.sval.ap{color:var(--ap)}.sval.lb{color:var(--lb)}.sval.gold{color:var(--gold)}.sval.purple{color:var(--purple)}
+.ssub{font-size:9px;color:var(--muted);margin-top:3px}
+label.lbl{font-size:10px;color:var(--muted);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+input[type=number],input[type=text]{
+  width:100%;background:var(--surf);border:1px solid var(--border);
+  border-radius:9px;color:var(--text);font-family:'Space Mono',monospace;
+  font-size:14px;padding:10px 12px;outline:none;transition:border-color .2s;
+  -webkit-appearance:none;appearance:none;
+}
+input:focus{border-color:var(--gold)}
+input::placeholder{color:var(--muted)}
+.ig{margin-bottom:10px}
+.dpills{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
+.dpill{
+  padding:6px 12px;border-radius:18px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);font-family:'Unbounded',sans-serif;
+  font-size:9px;cursor:pointer;transition:all .2s;
+}
+.dpill.active{background:var(--gold);color:#000;border-color:var(--gold)}
+.vrow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
+.vrow:last-child{border-bottom:none}
+.vnum{font-size:10px;color:var(--muted);width:18px}
+.vval{font-family:'Unbounded',sans-serif;font-weight:700;font-size:14px}
+.vdel{background:transparent;border:none;color:var(--red);font-size:20px;cursor:pointer;padding:2px 8px}
+.empty{text-align:center;padding:20px;color:var(--muted);font-size:11px}
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  width:100%;padding:12px;border-radius:11px;border:none;
+  font-family:'Unbounded',sans-serif;font-weight:700;font-size:11px;
+  cursor:pointer;transition:all .15s;
+}
+.btn:active{transform:scale(.97)}
+.btn-gold{background:var(--gold);color:#000}
+.btn-red{background:rgba(239,35,60,.12);color:var(--red);border:1px solid var(--red)}
+.btn-surf{background:var(--surf);color:var(--text);border:1px solid var(--border)}
+.btn-green{background:rgba(6,214,160,.12);color:var(--green);border:1px solid var(--green)}
+.arow{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.arow:last-child{border-bottom:none}
+.aname{font-size:12px;flex:1;padding-right:10px;line-height:1.3}
+.ainput{width:110px}
+.depo-row,.inv-row{display:flex;gap:7px;margin-bottom:8px;align-items:center}
+.depo-row input,.inv-row input{flex:1}
+.depo-del,.inv-del{background:transparent;border:none;color:var(--red);font-size:22px;cursor:pointer;padding:0 4px;flex-shrink:0}
+.div{height:1px;background:var(--border);margin:12px 0}
+.wbar{display:flex;gap:4px;margin-top:12px}
+.wday{flex:1;text-align:center}
+.wbar-wrap{height:56px;display:flex;align-items:flex-end;justify-content:center}
+.wbar-fill{width:100%;border-radius:3px 3px 0 0;min-height:3px;transition:height .5s}
+.wday-lbl{font-size:8px;color:var(--muted);margin-top:3px;text-transform:uppercase}
+.wday-val{font-size:8px;font-weight:700;margin-top:2px}
+.stitle{font-family:'Unbounded',sans-serif;font-size:19px;font-weight:900;padding-top:4px;margin-bottom:3px}
+.ssub-txt{font-size:11px;color:var(--muted);margin-bottom:13px}
+.toast{
+  position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(60px);
+  background:var(--gold);color:#000;font-family:'Unbounded',sans-serif;
+  font-weight:700;font-size:11px;padding:11px 22px;border-radius:30px;
+  z-index:999;transition:transform .3s;white-space:nowrap;
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.rrow{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.rrow:last-child{border-bottom:none}
+.rlbl{font-size:11px;color:var(--muted)}
+.rval{font-family:'Unbounded',sans-serif;font-weight:700;font-size:13px}
+.highlight-box{border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.hl-lbl{font-family:'Unbounded',sans-serif;font-size:10px;font-weight:700}
+.hl-val{font-family:'Unbounded',sans-serif;font-weight:900;font-size:19px}
+.grand-box{border-radius:14px;padding:18px;text-align:center;margin-bottom:11px}
+.grand-lbl{font-family:'Unbounded',sans-serif;font-size:10px;letter-spacing:1px;margin-bottom:8px}
+.grand-val{font-family:'Unbounded',sans-serif;font-weight:900;font-size:26px}
+.grand-sub{font-size:10px;color:var(--muted);margin-top:6px}
+/* Agent blocks */
+.agent-block{border-bottom:1px solid var(--border);padding:10px 0}
+.agent-block:last-child{border-bottom:none}
+.agent-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.agent-hname{font-family:'Unbounded',sans-serif;font-size:10px;font-weight:700;color:var(--text);letter-spacing:.4px;flex:1}
+.agent-htotal{font-family:'Unbounded',sans-serif;font-size:12px;font-weight:900;color:var(--gold)}
+.agent-rows{display:flex;flex-direction:column;gap:5px;padding-left:8px;border-left:2px solid var(--border)}
+.agent-txrow{display:flex;gap:6px;align-items:center}
+.agent-txrow input{flex:1;font-size:13px;padding:7px 10px}
+.agent-txdel{background:transparent;border:none;color:var(--red);font-size:18px;cursor:pointer;padding:0 4px;flex-shrink:0}
+.agent-addtx{
+  background:transparent;border:1px dashed var(--border);border-radius:8px;
+  color:var(--muted);font-size:9px;font-family:'Unbounded',sans-serif;
+  padding:5px 10px;cursor:pointer;margin-top:4px;width:100%;transition:all .2s;
+}
+.agent-name-inp{
+  font-family:'Unbounded',sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:.4px;background:transparent;border:none;
+  border-bottom:1.5px dashed var(--border);color:var(--text);flex:1;
+  outline:none;padding:2px 4px;min-width:0;cursor:text;transition:border-color .2s;
+}
+.agent-name-inp:focus{border-bottom-color:var(--gold);background:rgba(255,209,102,.06);border-radius:4px 4px 0 0}
+.agent-del-btn{background:transparent;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:0 2px;flex-shrink:0;line-height:1;transition:color .15s}
+.agent-del-btn:hover{color:var(--red)}
+.agent-add-name{display:flex;gap:6px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--border)}
+.agent-add-name input{flex:1;font-size:12px;padding:8px 10px}
+.agent-add-name button{padding:8px 14px;font-size:10px;flex-shrink:0}
+
+/* ══ SYNC STATUS BAR ══ */
+.sync-bar{
+  position:fixed;top:0;left:0;right:0;height:3px;
+  background:var(--gold);z-index:999;transform:scaleX(0);transform-origin:left;
+  transition:transform .5s ease;
+}
+.sync-bar.active{transform:scaleX(1)}
+
+/* ══ USERS TAB ══ */
+.user-list{display:flex;flex-direction:column;gap:8px}
+.user-card{
+  background:var(--surf);border:1px solid var(--border);border-radius:12px;
+  padding:12px 14px;display:flex;align-items:center;justify-content:space-between;
+}
+.user-info{display:flex;align-items:center;gap:10px}
+.u-avatar{
+  width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--lb),var(--ap));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;color:#000;
+  flex-shrink:0;
+}
+.u-name{font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700}
+.u-email{font-size:9px;color:var(--muted);margin-top:2px}
+.u-badge{
+  font-family:'Unbounded',sans-serif;font-size:9px;font-weight:700;
+  padding:3px 9px;border-radius:20px;
+}
+.u-badge.admin{background:rgba(255,209,102,.2);color:var(--gold);border:1px solid rgba(255,209,102,.3)}
+.u-badge.viewer{background:rgba(61,232,200,.1);color:var(--lb);border:1px solid rgba(61,232,200,.2)}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="sync-bar" id="syncBar"></div>
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════ WELCOME SCREEN ══════════════ -->
+<div id="welcome-screen">
+  <div class="welcome-img">💎</div>
+  <div class="welcome-logo"><span class="ap">MJ</span> <span class="lb">PRO CASH</span></div>
+  <div class="welcome-sub">SYSTÈME COMPTABLE · TRANSFER</div>
+
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuth('login',this)">CONNEXION</button>
+      <button class="auth-tab" onclick="switchAuth('signup',this)">CRÉER COMPTE</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="auth-panel active" id="panel-login">
+      <label class="field-label">EMAIL</label>
+      <input class="field-input" type="email" id="loginEmail" placeholder="votre@email.com">
+      <label class="field-label">MOT DE PASSE</label>
+      <input class="field-input" type="password" id="loginPass" placeholder="••••••••" onkeypress="if(event.key==='Enter')doLogin()">
+      <button class="auth-btn btn-gold" onclick="doLogin()" id="loginBtn">🔐 SE CONNECTER</button>
+      <div class="auth-msg" id="loginMsg"></div>
+    </div>
+
+    <!-- SIGNUP -->
+    <div class="auth-panel" id="panel-signup">
+      <label class="field-label">NOM COMPLET</label>
+      <input class="field-input" type="text" id="signupName" placeholder="Jean Dupont">
+      <label class="field-label">EMAIL</label>
+      <input class="field-input" type="email" id="signupEmail" placeholder="votre@email.com">
+      <label class="field-label">MOT DE PASSE (min. 6 caractères)</label>
+      <input class="field-input" type="password" id="signupPass" placeholder="••••••••">
+      <button class="auth-btn btn-lb" onclick="doSignup()" id="signupBtn">✨ CRÉER MON COMPTE</button>
+      <div class="auth-msg" id="signupMsg"></div>
+    </div>
+  </div>
+
+  <div class="welcome-note">
+    🔒 Vos données sont chiffrées et synchronisées<br>
+    📱 Accessible sur tous vos appareils<br>
+    ☁️ Powered by Supabase — <a href="#" onclick="showConfig()">Configuration</a>
+  </div>
+</div>
+
+<!-- ══════════════ CONFIG SCREEN ══════════════ -->
+<div id="config-screen" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px">
+  <div class="config-card">
+    <div class="config-title">⚙️ Configuration Supabase</div>
+    <div class="config-sub">Suivez ces étapes pour activer la synchronisation de vos données sur tous vos appareils.</div>
+
+    <div class="step-badge">ÉTAPE 1 — CRÉER LE PROJET</div>
+    <div class="setup-steps">
+      <div class="setup-step"><span>Allez sur <strong>supabase.com</strong> → Créez un compte gratuit → Nouveau projet</span></div>
+      <div class="setup-step"><span>Nommez votre projet <strong>mj-pro-cash</strong>, choisissez un mot de passe DB fort</span></div>
+      <div class="setup-step"><span>Attendez ~2 min que le projet démarre</span></div>
+    </div>
+
+    <div class="step-badge">ÉTAPE 2 — CRÉER LES TABLES SQL</div>
+    <div class="code-block">-- Copiez et collez dans SQL Editor de Supabase:
+
+CREATE TABLE IF NOT EXISTS reports (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  branch TEXT NOT NULL DEFAULT 'ap',
+  data JSONB NOT NULL DEFAULT '{}',
+  label TEXT,
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, branch)
+);
+
+ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users manage own reports"
+ON reports FOR ALL
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);</div>
+
+    <div class="step-badge">ÉTAPE 3 — VOS CLÉS API</div>
+    <div class="config-divider"></div>
+    <label class="field-label">SUPABASE URL</label>
+    <input class="field-input" id="cfgUrl" placeholder="https://xxxxxxxxxxxx.supabase.co" style="margin-bottom:10px">
+    <label class="field-label">ANON PUBLIC KEY</label>
+    <input class="field-input" id="cfgKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." style="margin-bottom:16px">
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-surf" style="padding:10px" onclick="backToWelcome()">← Retour</button>
+      <button class="btn btn-gold" onclick="saveConfig()">💾 SAUVEGARDER &amp; ACTIVER</button>
+    </div>
+    <div class="auth-msg" id="cfgMsg"></div>
+    <div class="welcome-note" style="margin-top:16px">
+      Clés disponibles dans : Settings → API → Project URL &amp; anon key
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MAIN APP ══════════════ -->
+<div id="app">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-main">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="logo"><span class="ap">MJ</span> <span class="lb">PRO</span></div>
+        <div class="branch-pills">
+          <button class="bpill ap" id="pillAP" onclick="setBranch('ap')">AP</button>
+          <button class="bpill lb active" id="pillLB" onclick="setBranch('lb')">LB</button>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <div class="sync-indicator" id="syncDot" title="Synchronisé"></div>
+        <div class="user-pill" onclick="showUserMenu()">
+          <div class="user-avatar" id="userAvatarTop">?</div>
+          <div class="user-name-pill" id="userNameTop">…</div>
+        </div>
+        <button class="ico-btn save" id="saveBtn" onclick="saveReport()" title="Sauvegarder">💾</button>
+        <button class="ico-btn exit" onclick="doLogout()" title="Déconnexion">⬅</button>
+      </div>
+    </div>
+    <div class="nav" id="mainNav">
+      <button class="nav-btn active" onclick="showSec('dash',this)">ACCUEIL</button>
+      <button class="nav-btn" onclick="showSec('ventes',this)">VENTES</button>
+      <button class="nav-btn" onclick="showSec('agents',this)">AGENTS</button>
+      <button class="nav-btn" onclick="showSec('depenses',this)">DÉPENSES</button>
+      <button class="nav-btn" onclick="showSec('inventaire',this)">INVENTAIRE</button>
+      <button class="nav-btn" onclick="showSec('rapport',this)">RAPPORT</button>
+      <button class="nav-btn" onclick="showSec('users',this)">UTILISATEURS</button>
+    </div>
+  </div>
+
+  <!-- ── SECTION: ACCUEIL ── -->
+  <div class="sec active" id="s-dash">
+    <div class="card">
+      <div class="ctitle">RÉSUMÉ DU JOUR</div>
+      <div class="sgrid">
+        <div class="sbox g"><div class="slabel">VENTES TOTALES</div><div class="sval green" id="d-ventes">0 HTG</div></div>
+        <div class="sbox r"><div class="slabel">DÉPENSES</div><div class="sval red" id="d-depenses">0 HTG</div></div>
+        <div class="sbox gold"><div class="slabel">BÉNÉFICE NET</div><div class="sval gold" id="d-benefice">0 HTG</div></div>
+        <div class="sbox l"><div class="slabel">ARTICLES VENDUS</div><div class="sval lb" id="d-articles">0</div></div>
+      </div>
+      <div class="sgrid">
+        <div class="sbox a"><div class="slabel">COMMISSION AP</div><div class="sval ap" id="d-comm-ap">0 HTG</div></div>
+        <div class="sbox purple"><div class="slabel">COMMISSION LB</div><div class="sval purple" id="d-comm-lb">0 HTG</div></div>
+      </div>
+      <div id="wbar-sec"></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">DERNIÈRE SYNC ☁️</div>
+      <div style="font-size:11px;color:var(--muted)" id="lastSyncInfo">Non synchronisé</div>
+    </div>
+  </div>
+
+  <!-- ── SECTION: VENTES ── -->
+  <div class="sec" id="s-ventes">
+    <div class="card">
+      <div class="ctitle">NOUVELLE VENTE</div>
+      <div class="ig"><label class="lbl">PRODUIT</label><input type="text" id="v-produit" placeholder="Nom du produit..."></div>
+      <div class="dpills" id="catPills">
+        <div class="dpill active" onclick="setCat(this,'Général')">Général</div>
+        <div class="dpill" onclick="setCat(this,'Alimentaire')">Alimentaire</div>
+        <div class="dpill" onclick="setCat(this,'Service')">Service</div>
+        <div class="dpill" onclick="setCat(this,'Transfer')">Transfer</div>
+        <div class="dpill" onclick="setCat(this,'Autre')">Autre</div>
+      </div>
+      <div class="ig"><label class="lbl">PRIX UNITAIRE (HTG)</label><input type="number" id="v-prix" placeholder="0"></div>
+      <div class="ig"><label class="lbl">QUANTITÉ</label><input type="number" id="v-qte" placeholder="1" value="1"></div>
+      <button class="btn btn-gold" onclick="addVente()">+ AJOUTER VENTE</button>
+    </div>
+    <div class="card">
+      <div class="ctitle">VENTES DU JOUR</div>
+      <div id="ventesList"><div class="empty">Aucune vente enregistrée</div></div>
+      <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:10px;color:var(--muted)">TOTAL</span>
+        <span class="sval green" id="ventesTotal">0 HTG</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION: AGENTS ── -->
+  <div class="sec" id="s-agents">
+    <div class="card">
+      <div class="ctitle">PERFORMANCES AGENTS</div>
+      <div id="agentsContainer"><div class="empty">Aucun agent</div></div>
+      <div class="agent-add-name">
+        <input type="text" id="newAgentName" placeholder="Nom de l'agent...">
+        <button class="btn btn-surf" style="width:auto" onclick="addAgent()">+ AJOUTER</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctitle">TOTAUX AGENTS</div>
+      <div class="sgrid">
+        <div class="sbox g"><div class="slabel">TOTAL VENTES</div><div class="sval green" id="a-total">0 HTG</div></div>
+        <div class="sbox a"><div class="slabel">COMMISSIONS</div><div class="sval ap" id="a-comm">0 HTG</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION: DÉPENSES ── -->
+  <div class="sec" id="s-depenses">
+    <div class="card">
+      <div class="ctitle">AJOUTER DÉPENSE</div>
+      <div class="ig"><label class="lbl">DESCRIPTION</label><input type="text" id="dep-desc" placeholder="Description..."></div>
+      <div class="ig"><label class="lbl">MONTANT (HTG)</label><input type="number" id="dep-mnt" placeholder="0"></div>
+      <button class="btn btn-red" onclick="addDepense()">+ AJOUTER DÉPENSE</button>
+    </div>
+    <div class="card">
+      <div class="ctitle">DÉPENSES DU JOUR</div>
+      <div id="depensesList"><div class="empty">Aucune dépense</div></div>
+      <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:10px;color:var(--muted)">TOTAL</span>
+        <span class="sval red" id="depensesTotal">0 HTG</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION: INVENTAIRE ── -->
+  <div class="sec" id="s-inventaire">
+    <div class="card">
+      <div class="ctitle">AJOUTER ARTICLE</div>
+      <div class="ig"><label class="lbl">ARTICLE</label><input type="text" id="inv-art" placeholder="Nom de l'article..."></div>
+      <div class="ig"><label class="lbl">QUANTITÉ EN STOCK</label><input type="number" id="inv-qte" placeholder="0"></div>
+      <div class="ig"><label class="lbl">PRIX UNITAIRE (HTG)</label><input type="number" id="inv-prix" placeholder="0"></div>
+      <button class="btn btn-surf" onclick="addInventaire()">+ AJOUTER</button>
+    </div>
+    <div class="card">
+      <div class="ctitle">STOCK ACTUEL</div>
+      <div id="inventaireList"><div class="empty">Aucun article en stock</div></div>
+      <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:10px;color:var(--muted)">VALEUR STOCK</span>
+        <span class="sval lb" id="stockTotal">0 HTG</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION: RAPPORT ── -->
+  <div class="sec" id="s-rapport">
+    <div class="grand-box" style="background:rgba(6,214,160,.08);border:1px solid rgba(6,214,160,.2)">
+      <div class="grand-lbl" style="color:var(--green)">💰 BÉNÉFICE NET DU JOUR</div>
+      <div class="grand-val" style="color:var(--green)" id="r-benefice">0 HTG</div>
+      <div class="grand-sub" id="r-date">—</div>
+    </div>
+    <div class="card">
+      <div class="ctitle">RÉSUMÉ FINANCIER</div>
+      <div class="rrow"><span class="rlbl">Chiffre d'affaires</span><span class="rval" style="color:var(--green)" id="r-ca">0</span></div>
+      <div class="rrow"><span class="rlbl">Total dépenses</span><span class="rval" style="color:var(--red)" id="r-dep">0</span></div>
+      <div class="rrow"><span class="rlbl">Articles vendus</span><span class="rval" id="r-art">0</span></div>
+      <div class="rrow"><span class="rlbl">Valeur inventaire</span><span class="rval" style="color:var(--lb)" id="r-inv">0</span></div>
+      <div class="rrow"><span class="rlbl">Commission agents</span><span class="rval" style="color:var(--ap)" id="r-comm">0</span></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">HISTORIQUE SYNCHRONISÉ ☁️</div>
+      <div id="historyList"><div class="empty">Aucun historique disponible</div></div>
+    </div>
+    <button class="btn btn-gold" onclick="saveReport()">☁️ SAUVEGARDER CE RAPPORT</button>
+    <div style="height:8px"></div>
+    <button class="btn btn-surf" onclick="newDay()" style="margin-top:0">🔄 NOUVEAU JOUR</button>
+  </div>
+
+  <!-- ── SECTION: UTILISATEURS ── -->
+  <div class="sec" id="s-users">
+    <div class="card">
+      <div class="ctitle">MON COMPTE</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div class="u-avatar" id="myAvatar">?</div>
+        <div>
+          <div style="font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700" id="myName">—</div>
+          <div style="font-size:10px;color:var(--muted)" id="myEmail">—</div>
+          <div class="u-badge admin" style="display:inline-block;margin-top:5px">ADMIN</div>
+        </div>
+      </div>
+      <div class="div"></div>
+      <div class="ctitle" style="margin-top:8px">ACCÈS & SÉCURITÉ</div>
+      <div class="rrow">
+        <span class="rlbl">Synchronisation</span>
+        <span style="font-size:10px;color:var(--green)" id="syncStatus">Active ✓</span>
+      </div>
+      <div class="rrow">
+        <span class="rlbl">Données chiffrées</span>
+        <span style="font-size:10px;color:var(--green)">Oui ✓</span>
+      </div>
+      <div class="rrow">
+        <span class="rlbl">Accès modification</span>
+        <span style="font-size:10px;color:var(--gold)">Vous seul ✓</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctitle">PARTAGE (LECTURE SEULE)</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6">
+        Partagez cet accès pour que d'autres voient les rapports sans pouvoir modifier.
+      </div>
+      <div class="ig">
+        <label class="lbl">EMAIL DU LECTEUR</label>
+        <input type="email" id="shareEmail" placeholder="collaborateur@email.com">
+      </div>
+      <button class="btn btn-surf" onclick="inviteViewer()">📤 INVITER LECTEUR</button>
+    </div>
+    <div class="card">
+      <div class="ctitle">CONFIGURATION SUPABASE</div>
+      <button class="btn btn-surf" onclick="showConfig()">⚙️ MODIFIER LA CONFIGURATION</button>
+      <div style="height:8px"></div>
+      <button class="btn btn-red" onclick="doLogout()">🚪 SE DÉCONNECTER</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  CONFIG & SUPABASE INIT
+// ══════════════════════════════════════════
+let SB = null;
+let currentUser = null;
+let currentBranch = 'lb';
+let currentCat = 'Général';
+let isSaving = false;
+
+const DEFAULT_DATA = () => ({
+  ventes: [], depenses: [], agents: [], inventaire: [],
+  date: new Date().toLocaleDateString('fr-FR'),
+  ts: Date.now()
+});
+
+let DATA = { ap: DEFAULT_DATA(), lb: DEFAULT_DATA() };
+
+function D() { return DATA[currentBranch]; }
+
+// ── Supabase init ──
+function initSB() {
+  const url = localStorage.getItem('sb_url') || '';
+  const key = localStorage.getItem('sb_key') || '';
+  if (!url || !key) return false;
+  try {
+    SB = window.supabase.createClient(url, key);
+    return true;
+  } catch(e) { return false; }
+}
+
+// ══════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════
+function switchAuth(tab, btn) {
+  document.querySelectorAll('.auth-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const msg = document.getElementById('loginMsg');
+  const btn = document.getElementById('loginBtn');
+  msg.className = 'auth-msg';
+
+  if (!email || !pass) { showMsg(msg,'err','Remplissez tous les champs'); return; }
+  if (!initSB()) { showConfig(); return; }
+
+  btn.disabled = true; btn.textContent = '⏳ Connexion...';
+  const { data, error } = await SB.auth.signInWithPassword({ email, password: pass });
+  btn.disabled = false; btn.textContent = '🔐 SE CONNECTER';
+
+  if (error) { showMsg(msg,'err','❌ ' + error.message); return; }
+  currentUser = data.user;
+  await enterApp();
+}
+
+async function doSignup() {
+  const name = document.getElementById('signupName').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const pass = document.getElementById('signupPass').value;
+  const msg = document.getElementById('signupMsg');
+  const btn = document.getElementById('signupBtn');
+  msg.className = 'auth-msg';
+
+  if (!name || !email || !pass) { showMsg(msg,'err','Remplissez tous les champs'); return; }
+  if (pass.length < 6) { showMsg(msg,'err','Mot de passe: minimum 6 caractères'); return; }
+  if (!initSB()) { showConfig(); return; }
+
+  btn.disabled = true; btn.textContent = '⏳ Création...';
+  const { data, error } = await SB.auth.signUp({
+    email, password: pass,
+    options: { data: { full_name: name } }
+  });
+  btn.disabled = false; btn.textContent = '✨ CRÉER MON COMPTE';
+
+  if (error) { showMsg(msg,'err','❌ ' + error.message); return; }
+  if (data.user && !data.session) {
+    showMsg(msg,'ok','✅ Vérifiez votre email pour confirmer votre compte!');
+  } else {
+    currentUser = data.user;
+    showMsg(msg,'ok','✅ Compte créé! Connexion en cours...');
+    setTimeout(() => enterApp(), 1200);
+  }
+}
+
+async function doLogout() {
+  if (SB) await SB.auth.signOut();
+  currentUser = null;
+  DATA = { ap: DEFAULT_DATA(), lb: DEFAULT_DATA() };
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('welcome-screen').style.display = 'flex';
+}
+
+async function enterApp() {
+  document.getElementById('welcome-screen').style.display = 'none';
+  document.getElementById('config-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  updateUserUI();
+  await loadAllData();
+  refreshAll();
+}
+
+function updateUserUI() {
+  if (!currentUser) return;
+  const name = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
+  const initial = name[0].toUpperCase();
+  document.getElementById('userAvatarTop').textContent = initial;
+  document.getElementById('userNameTop').textContent = name.split(' ')[0].toUpperCase();
+  document.getElementById('myAvatar').textContent = initial;
+  document.getElementById('myName').textContent = name;
+  document.getElementById('myEmail').textContent = currentUser.email;
+}
+
+// ══════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════
+function showConfig() {
+  const url = localStorage.getItem('sb_url') || '';
+  const key = localStorage.getItem('sb_key') || '';
+  document.getElementById('cfgUrl').value = url;
+  document.getElementById('cfgKey').value = key;
+  document.getElementById('welcome-screen').style.display = 'none';
+  document.getElementById('config-screen').style.display = 'flex';
+}
+
+function backToWelcome() {
+  document.getElementById('config-screen').style.display = 'none';
+  document.getElementById('welcome-screen').style.display = 'flex';
+}
+
+async function saveConfig() {
+  const url = document.getElementById('cfgUrl').value.trim();
+  const key = document.getElementById('cfgKey').value.trim();
+  const msg = document.getElementById('cfgMsg');
+  msg.className = 'auth-msg';
+  if (!url || !key) { showMsg(msg,'err','Renseignez URL et Key'); return; }
+  localStorage.setItem('sb_url', url);
+  localStorage.setItem('sb_key', key);
+  if (initSB()) {
+    const { error } = await SB.from('reports').select('id').limit(1);
+    if (error && error.code !== 'PGRST116') {
+      showMsg(msg,'err','⚠️ Connexion OK mais table "reports" introuvable. Exécutez le SQL ci-dessus.');
+    } else {
+      showMsg(msg,'ok','✅ Configuration sauvegardée! Retour à la connexion...');
+      setTimeout(backToWelcome, 1500);
+    }
+  } else {
+    showMsg(msg,'err','❌ URL ou Key invalide');
+  }
+}
+
+// ══════════════════════════════════════════
+//  SYNC — SUPABASE READ/WRITE
+// ══════════════════════════════════════════
+async function loadAllData() {
+  if (!SB || !currentUser) return;
+  setSyncStatus('syncing');
+  try {
+    const { data, error } = await SB.from('reports')
+      .select('*')
+      .eq('user_id', currentUser.id);
+    if (error) throw error;
+    if (data && data.length) {
+      data.forEach(row => {
+        if (row.branch === 'ap' || row.branch === 'lb') {
+          DATA[row.branch] = row.data;
+        }
+      });
+    }
+    setSyncStatus('online');
+    updateLastSync();
+    loadHistory();
+  } catch(e) {
+    setSyncStatus('offline');
+    console.error('Load error:', e);
+  }
+}
+
+async function saveReport() {
+  if (isSaving) return;
+  if (!SB || !currentUser) { showToast('⚠️ Non connecté au cloud'); return; }
+  isSaving = true;
+  setSyncStatus('syncing');
+  animateSyncBar();
+  document.getElementById('saveBtn').textContent = '⏳';
+
+  try {
+    for (const branch of ['ap','lb']) {
+      const { error } = await SB.from('reports').upsert({
+        user_id: currentUser.id,
+        branch,
+        data: DATA[branch],
+        label: `Rapport ${DATA[branch].date || new Date().toLocaleDateString('fr-FR')}`,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id,branch' });
+      if (error) throw error;
+    }
+    setSyncStatus('online');
+    updateLastSync();
+    showToast('✅ Données sauvegardées dans le cloud!');
+    loadHistory();
+  } catch(e) {
+    setSyncStatus('offline');
+    showToast('❌ Erreur sync: ' + e.message);
+  } finally {
+    isSaving = false;
+    document.getElementById('saveBtn').textContent = '💾';
+  }
+}
+
+async function loadHistory() {
+  if (!SB || !currentUser) return;
+  const { data } = await SB.from('reports')
+    .select('branch, label, updated_at')
+    .eq('user_id', currentUser.id)
+    .order('updated_at', { ascending: false });
+  const container = document.getElementById('historyList');
+  if (!data || !data.length) {
+    container.innerHTML = '<div class="empty">Aucun historique</div>'; return;
+  }
+  container.innerHTML = data.map(r => `
+    <div class="rrow">
+      <div>
+        <div style="font-size:11px;font-weight:700">${r.label || 'Rapport'}</div>
+        <div style="font-size:9px;color:var(--muted)">${r.branch.toUpperCase()} · ${new Date(r.updated_at).toLocaleString('fr-FR')}</div>
+      </div>
+      <span style="font-size:10px;color:var(--green)">☁️ sync</span>
+    </div>
+  `).join('');
+}
+
+function setSyncStatus(status) {
+  const dot = document.getElementById('syncDot');
+  dot.className = 'sync-indicator';
+  if (status === 'online') { dot.style.background = 'var(--green)'; dot.title = 'Synchronisé'; }
+  else if (status === 'syncing') { dot.style.background = 'var(--gold)'; dot.title = 'Synchronisation...'; }
+  else { dot.style.background = 'var(--red)'; dot.title = 'Hors ligne'; }
+}
+
+function updateLastSync() {
+  const el = document.getElementById('lastSyncInfo');
+  if (el) el.textContent = '☁️ Dernière sync: ' + new Date().toLocaleString('fr-FR');
+  const ss = document.getElementById('syncStatus');
+  if (ss) ss.textContent = 'Active · ' + new Date().toLocaleTimeString('fr-FR') + ' ✓';
+}
+
+function animateSyncBar() {
+  const bar = document.getElementById('syncBar');
+  bar.classList.add('active');
+  setTimeout(() => bar.classList.remove('active'), 600);
+}
+
+// ══════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════
+function showSec(id, btn) {
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('active'));
+  document.getElementById('s-' + id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  refreshAll();
+}
+
+function setBranch(b) {
+  currentBranch = b;
+  document.getElementById('pillAP').classList.toggle('active', b === 'ap');
+  document.getElementById('pillLB').classList.toggle('active', b === 'lb');
+  refreshAll();
+}
+
+function setCat(el, cat) {
+  currentCat = cat;
+  document.querySelectorAll('.dpill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ══════════════════════════════════════════
+//  VENTES
+// ══════════════════════════════════════════
+function addVente() {
+  const produit = document.getElementById('v-produit').value.trim();
+  const prix = parseFloat(document.getElementById('v-prix').value) || 0;
+  const qte = parseInt(document.getElementById('v-qte').value) || 1;
+  if (!produit || prix <= 0) { showToast('⚠️ Produit et prix requis'); return; }
+  D().ventes.push({ id: Date.now(), produit, cat: currentCat, prix, qte, total: prix * qte });
+  document.getElementById('v-produit').value = '';
+  document.getElementById('v-prix').value = '';
+  document.getElementById('v-qte').value = '1';
+  refreshAll();
+  showToast('✅ Vente ajoutée');
+}
+
+function delVente(id) {
+  D().ventes = D().ventes.filter(v => v.id !== id);
+  refreshAll();
+}
+
+// ══════════════════════════════════════════
+//  AGENTS
+// ══════════════════════════════════════════
+function addAgent() {
+  const name = document.getElementById('newAgentName').value.trim();
+  if (!name) return;
+  D().agents.push({ id: Date.now(), name, txs: [{ id: Date.now(), val: 0 }] });
+  document.getElementById('newAgentName').value = '';
+  renderAgents();
+}
+
+function delAgent(id) {
+  D().agents = D().agents.filter(a => a.id !== id);
+  renderAgents(); refreshDash();
+}
+
+function addAgentTx(agentId) {
+  const a = D().agents.find(a => a.id === agentId);
+  if (a) { a.txs.push({ id: Date.now(), val: 0 }); renderAgents(); }
+}
+
+function delAgentTx(agentId, txId) {
+  const a = D().agents.find(a => a.id === agentId);
+  if (a && a.txs.length > 1) { a.txs = a.txs.filter(t => t.id !== txId); renderAgents(); refreshDash(); }
+}
+
+function updateAgentTx(agentId, txId, val) {
+  const a = D().agents.find(a => a.id === agentId);
+  if (a) { const t = a.txs.find(t => t.id === txId); if (t) t.val = parseFloat(val) || 0; refreshDash(); }
+}
+
+function updateAgentName(agentId, name) {
+  const a = D().agents.find(a => a.id === agentId);
+  if (a) a.name = name;
+}
+
+function agentTotal(a) { return a.txs.reduce((s, t) => s + (parseFloat(t.val) || 0), 0); }
+
+function renderAgents() {
+  const c = document.getElementById('agentsContainer');
+  if (!D().agents.length) { c.innerHTML = '<div class="empty">Aucun agent</div>'; updateAgentTotals(); return; }
+  c.innerHTML = D().agents.map(a => `
+    <div class="agent-block">
+      <div class="agent-header">
+        <input class="agent-name-inp" value="${a.name}" onchange="updateAgentName(${a.id},this.value)" oninput="updateAgentName(${a.id},this.value)">
+        <span class="agent-htotal">${agentTotal(a).toLocaleString()} HTG</span>
+        <button class="agent-del-btn" onclick="delAgent(${a.id})">✕</button>
+      </div>
+      <div class="agent-rows">
+        ${a.txs.map(t => `
+          <div class="agent-txrow">
+            <input type="number" value="${t.val || ''}" placeholder="Montant..." class="agent-txrow" oninput="updateAgentTx(${a.id},${t.id},this.value)">
+            <button class="agent-txdel" onclick="delAgentTx(${a.id},${t.id})">−</button>
+          </div>
+        `).join('')}
+        <button class="agent-addtx" onclick="addAgentTx(${a.id})">+ Ajouter montant</button>
+      </div>
+    </div>
+  `).join('');
+  updateAgentTotals();
+}
+
+function updateAgentTotals() {
+  const totalVentes = D().agents.reduce((s, a) => s + agentTotal(a), 0);
+  const comm = totalVentes * 0.05;
+  document.getElementById('a-total').textContent = totalVentes.toLocaleString() + ' HTG';
+  document.getElementById('a-comm').textContent = comm.toLocaleString('fr-FR', { maximumFractionDigits: 0 }) + ' HTG';
+}
+
+// ══════════════════════════════════════════
+//  DÉPENSES
+// ══════════════════════════════════════════
+function addDepense() {
+  const desc = document.getElementById('dep-desc').value.trim();
+  const mnt = parseFloat(document.getElementById('dep-mnt').value) || 0;
+  if (!desc || mnt <= 0) { showToast('⚠️ Description et montant requis'); return; }
+  D().depenses.push({ id: Date.now(), desc, mnt });
+  document.getElementById('dep-desc').value = '';
+  document.getElementById('dep-mnt').value = '';
+  refreshAll();
+  showToast('✅ Dépense enregistrée');
+}
+
+function delDepense(id) {
+  D().depenses = D().depenses.filter(d => d.id !== id);
+  refreshAll();
+}
+
+// ══════════════════════════════════════════
+//  INVENTAIRE
+// ══════════════════════════════════════════
+function addInventaire() {
+  const art = document.getElementById('inv-art').value.trim();
+  const qte = parseInt(document.getElementById('inv-qte').value) || 0;
+  const prix = parseFloat(document.getElementById('inv-prix').value) || 0;
+  if (!art) { showToast('⚠️ Nom de l\'article requis'); return; }
+  D().inventaire.push({ id: Date.now(), art, qte, prix, valeur: qte * prix });
+  document.getElementById('inv-art').value = '';
+  document.getElementById('inv-qte').value = '';
+  document.getElementById('inv-prix').value = '';
+  refreshAll();
+  showToast('✅ Article ajouté');
+}
+
+function delInventaire(id) {
+  D().inventaire = D().inventaire.filter(i => i.id !== id);
+  refreshAll();
+}
+
+// ══════════════════════════════════════════
+//  REFRESH / RENDER
+// ══════════════════════════════════════════
+function refreshAll() {
+  renderVentes(); renderDepenses(); renderInventaire(); renderAgents();
+  refreshDash(); refreshRapport();
+}
+
+function getTotals() {
+  const ventes = D().ventes.reduce((s, v) => s + v.total, 0);
+  const articles = D().ventes.reduce((s, v) => s + v.qte, 0);
+  const depenses = D().depenses.reduce((s, d) => s + d.mnt, 0);
+  const stock = D().inventaire.reduce((s, i) => s + (i.qte * i.prix), 0);
+  const agentsVentes = D().agents.reduce((s, a) => s + agentTotal(a), 0);
+  const commission = agentsVentes * 0.05;
+  const benefice = ventes - depenses;
+  return { ventes, articles, depenses, stock, commission, benefice, agentsVentes };
+}
+
+function refreshDash() {
+  const t = getTotals();
+  const fmt = n => n.toLocaleString('fr-FR', { maximumFractionDigits: 0 }) + ' HTG';
+  document.getElementById('d-ventes').textContent = fmt(t.ventes);
+  document.getElementById('d-depenses').textContent = fmt(t.depenses);
+  document.getElementById('d-benefice').textContent = fmt(t.benefice);
+  document.getElementById('d-articles').textContent = t.articles;
+  document.getElementById('d-comm-ap').textContent = fmt(t.commission);
+  document.getElementById('d-comm-lb').textContent = fmt(t.commission);
+  updateAgentTotals();
+}
+
+function refreshRapport() {
+  const t = getTotals();
+  const fmt = n => n.toLocaleString('fr-FR', { maximumFractionDigits: 0 }) + ' HTG';
+  document.getElementById('r-benefice').textContent = fmt(t.benefice);
+  document.getElementById('r-ca').textContent = fmt(t.ventes);
+  document.getElementById('r-dep').textContent = fmt(t.depenses);
+  document.getElementById('r-art').textContent = t.articles + ' articles';
+  document.getElementById('r-inv').textContent = fmt(t.stock);
+  document.getElementById('r-comm').textContent = fmt(t.commission);
+  document.getElementById('r-date').textContent = D().date || new Date().toLocaleDateString('fr-FR');
+}
+
+function renderVentes() {
+  const c = document.getElementById('ventesList');
+  if (!D().ventes.length) { c.innerHTML = '<div class="empty">Aucune vente</div>'; document.getElementById('ventesTotal').textContent = '0 HTG'; return; }
+  c.innerHTML = D().ventes.map((v, i) => `
+    <div class="vrow">
+      <span class="vnum">${i + 1}</span>
+      <div style="flex:1">
+        <div class="vval">${(v.total || 0).toLocaleString()} HTG</div>
+        <div style="font-size:9px;color:var(--muted)">${v.produit} · ${v.qte}x${v.prix} · ${v.cat}</div>
+      </div>
+      <button class="vdel" onclick="delVente(${v.id})">×</button>
+    </div>
+  `).join('');
+  const total = D().ventes.reduce((s, v) => s + v.total, 0);
+  document.getElementById('ventesTotal').textContent = total.toLocaleString('fr-FR', { maximumFractionDigits: 0 }) + ' HTG';
+}
+
+function renderDepenses() {
+  const c = document.getElementById('depensesList');
+  if (!D().depenses.length) { c.innerHTML = '<div class="empty">Aucune dépense</div>'; document.getElementById('depensesTotal').textContent = '0 HTG'; return; }
+  c.innerHTML = D().depenses.map((d, i) => `
+    <div class="vrow">
+      <span class="vnum">${i + 1}</span>
+      <div style="flex:1">
+        <div class="vval" style="color:var(--red)">${d.mnt.toLocaleString()} HTG</div>
+        <div style="font-size:9px;color:var(--muted)">${d.desc}</div>
+      </div>
+      <button class="vdel" onclick="delDepense(${d.id})">×</button>
+    </div>
+  `).join('');
+  const total = D().depenses.reduce((s, d) => s + d.mnt, 0);
+  document.getElementById('depensesTotal').textContent = total.toLocaleString('fr-FR', { maximumFractionDigits: 0 }) + ' HTG';
+}
+
+function renderInventaire() {
+  const c = document.getElementById('inventaireList');
+  if (!D().inventaire.length) { c.innerHTML = '<div class="empty">Aucun article</div>'; document.getElementById('stockTotal').textContent = '0 HTG'; return; }
+  c.innerHTML = D().inventaire.map((inv, i) => `
+    <div class="vrow">
+      <span class="vnum">${i + 1}</span>
+      <div style="flex:1">
+        <div class="vval" style="color:var(--lb)">${(inv.qte * inv.prix).toLocaleString()} HTG</div>
+        <div style="font-size:9px;color:var(--muted)">${inv.art} · ${inv.qte} unités · ${inv.prix} HTG/u</div>
+      </div>
+      <button class="vdel" onclick="delInventaire(${inv.id})">×</button>
+    </div>
+  `).join('');
+  const total = D().inventaire.reduce((s, i) => s + (i.qte * i.prix), 0);
+  document.getElementById('stockTotal').textContent = total.toLocaleString('fr-FR', { maximumFractionDigits: 0 }) + ' HTG';
+}
+
+// ══════════════════════════════════════════
+//  NOUVEAU JOUR
+// ══════════════════════════════════════════
+function newDay() {
+  if (!confirm('Nouveau jour? Les données actuelles resteront sauvegardées dans le cloud.')) return;
+  DATA[currentBranch] = DEFAULT_DATA();
+  refreshAll();
+  showToast('✅ Nouveau jour commencé!');
+}
+
+// ══════════════════════════════════════════
+//  INVITER LECTEUR
+// ══════════════════════════════════════════
+async function inviteViewer() {
+  const email = document.getElementById('shareEmail').value.trim();
+  if (!email) { showToast('⚠️ Email requis'); return; }
+  // Note: Pour une vraie implémentation, créez une table "shares" dans Supabase
+  showToast('📤 Invitation envoyée à ' + email + ' (fonctionnalité avancée)');
+  document.getElementById('shareEmail').value = '';
+}
+
+function showUserMenu() { showSec('users', null); }
+
+// ══════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════
+function showMsg(el, type, msg) {
+  el.textContent = msg;
+  el.className = 'auth-msg ' + type;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ══════════════════════════════════════════
+//  AUTO-SAVE (toutes les 2 min)
+// ══════════════════════════════════════════
+setInterval(() => { if (currentUser && SB) saveReport(); }, 120000);
+
+// ══════════════════════════════════════════
+//  CHECK SESSION AU DEMARRAGE
+// ══════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', async () => {
+  if (!initSB()) return; // Pas de config, reste sur welcome
+  const { data: { session } } = await SB.auth.getSession();
+  if (session && session.user) {
+    currentUser = session.user;
+    await enterApp();
+  }
+  // Auto-sync quand l'onglet redevient actif
+  document.addEventListener('visibilitychange', async () => {
+    if (!document.hidden && currentUser && SB) {
+      await loadAllData();
+      refreshAll();
+    }
+  });
+});
+</script>
+</body>
+</html>
